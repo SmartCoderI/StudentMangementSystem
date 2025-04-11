@@ -3,14 +3,12 @@ import java.io.*;
 
 public class Logger {
     private static Logger instance;
-    private PrintWriter writer;
-    private boolean isSystemErr = true;
-
+    private Writer writer;
+    private boolean isFile = false;
 
     private Logger() {
-        writer = new PrintWriter(System.err, true);
+        this.writer = new OutputStreamWriter(System.err);
     }
-
 
     public static Logger getInstance() {
         if (instance == null) {
@@ -19,22 +17,28 @@ public class Logger {
         return instance;
     }
 
-
     public void setOutputDestination(String filename) {
-        if (!isSystemErr && writer != null) {
-            writer.close();
-        }
         try {
-            writer = new PrintWriter(new FileOutputStream(filename, true), true); // append mode
-            isSystemErr = false;
+            if (isFile && writer != null) {
+                writer.close();
+            }
+            FileOutputStream fos = new FileOutputStream(filename, true); // append mode
+            writer = new OutputStreamWriter(fos);
+            isFile = true;
         } catch (IOException e) {
-            writer = new PrintWriter(System.err, true);
-            isSystemErr = true;
+            System.err.println("Error initializing logger: " + e.getMessage());
+            writer = new OutputStreamWriter(System.err);
+            isFile = false;
         }
     }
 
-
     public void log(String message) {
-        writer.println(System.currentTimeMillis() + " " + message);
+        try {
+            long timestamp = System.currentTimeMillis();
+            writer.write(timestamp + " " + message + System.lineSeparator());
+            writer.flush();
+        } catch (IOException e) {
+            System.err.println("Failed to write log: " + e.getMessage());
+        }
     }
 }

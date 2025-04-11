@@ -2,6 +2,8 @@ package edu.upenn.cit594.datamanagement;
 
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import edu.upenn.cit594.util.CovidData;
@@ -48,7 +50,11 @@ public class CovidLoader {
 
                 if (!zip.matches("\\d{5}")) continue;
                 try {
-                    LocalDate date = LocalDate.parse(timestamp.split(" ")[0]);
+                    //LocalDate date = LocalDate.parse(timestamp.split(" ")[0]);
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
+                    LocalDate date = dateTime.toLocalDate();
+
                     int partialV = partialStr.isEmpty() ? 0 : Integer.parseInt(partialStr);
                     int fullyV = fullStr.isEmpty() ? 0 : Integer.parseInt(fullStr);
                     records.add(new CovidData(zip, date, partialV, fullyV));
@@ -75,7 +81,11 @@ public class CovidLoader {
 
                 if (!zip.matches("\\d{5}")) continue;
                 try {
-                    LocalDate date = LocalDate.parse(timestamp.split(" ")[0]);
+                    //LocalDate date = LocalDate.parse(timestamp.split(" ")[0]);
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime dateTime = LocalDateTime.parse(timestamp, formatter);
+                    LocalDate date = dateTime.toLocalDate();
+
                     int partial = partialStr.isEmpty() || partialStr.equals("null") ? 0 : Integer.parseInt(partialStr);
                     int full = fullStr.isEmpty() || fullStr.equals("null") ? 0 : Integer.parseInt(fullStr);
                     records.add(new CovidData(zip, date, partial, full));

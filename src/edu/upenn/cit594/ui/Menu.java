@@ -24,7 +24,6 @@ public class Menu {
         if (arguments.keySet().containsAll(Set.of("properties", "population", "covid"))) availableActions.add(7);
     }
 
-
     private void printMenu() {
         System.out.println("Menu:");
         System.out.println("0. Exit the program.");
@@ -35,6 +34,15 @@ public class Menu {
         System.out.println("5. Show the average total livable area for properties in a specified ZIP Code.");
         System.out.println("6. Show the total market value of properties, per capita, for a specified ZIP Code.");
         System.out.println("7. Show the results of your custom feature.");
+    }
+
+    private void showAvailableActions() {
+        System.out.println("BEGIN OUTPUT");
+        Collections.sort(availableActions);
+        for (int action : availableActions) {
+            System.out.println(action);
+        }
+        System.out.println("END OUTPUT");
     }
 
 

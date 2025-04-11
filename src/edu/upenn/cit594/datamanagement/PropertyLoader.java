@@ -42,7 +42,7 @@ public class PropertyLoader {
                 if (parts.length <= Math.max(zipIndex, Math.max(valueIndex, areaIndex))) continue;
 
                 String zip = parts[zipIndex].trim();
-                if (!zip.matches("\\d{5}")) continue;
+                if (zip.length() < 5 || !zip.substring(0, 5).matches("\\d{5}")) continue;
                 try {
                     double value = Double.parseDouble(parts[valueIndex]);
                     double area = Double.parseDouble(parts[areaIndex]);
