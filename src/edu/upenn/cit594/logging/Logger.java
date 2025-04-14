@@ -1,4 +1,5 @@
 package edu.upenn.cit594.logging;
+
 import java.io.*;
 
 public class Logger {

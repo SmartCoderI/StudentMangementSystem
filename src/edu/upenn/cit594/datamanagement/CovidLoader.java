@@ -58,7 +58,8 @@ public class CovidLoader {
                     int partialV = partialStr.isEmpty() ? 0 : Integer.parseInt(partialStr);
                     int fullyV = fullStr.isEmpty() ? 0 : Integer.parseInt(fullStr);
                     records.add(new CovidData(zip, date, partialV, fullyV));
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         } catch (IOException e) {
             System.err.println("Error reading COVID CSV file: " + e.getMessage());
@@ -89,7 +90,8 @@ public class CovidLoader {
                     int partial = partialStr.isEmpty() || partialStr.equals("null") ? 0 : Integer.parseInt(partialStr);
                     int full = fullStr.isEmpty() || fullStr.equals("null") ? 0 : Integer.parseInt(fullStr);
                     records.add(new CovidData(zip, date, partial, full));
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         } catch (IOException | ParseException e) {
             System.err.println("Error reading COVID JSON file: " + e.getMessage());

@@ -47,7 +47,8 @@ public class PropertyLoader {
                     double value = Double.parseDouble(parts[valueIndex]);
                     double area = Double.parseDouble(parts[areaIndex]);
                     properties.add(new PropertyData(zip, value, area));
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         } catch (IOException e) {
             System.err.println("Error reading properties file: " + e.getMessage());

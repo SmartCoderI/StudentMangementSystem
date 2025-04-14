@@ -1,4 +1,5 @@
 package edu.upenn.cit594.util;
+
 /*
 only in CSV
 headers:
@@ -14,6 +15,11 @@ public class PopulationData {
         this.population = population;
     }
 
-    public String getZipCode() { return zipCode; }
-    public int getPopulation() { return population; }
+    public String getZipCode() {
+        return zipCode;
+    }
+
+    public int getPopulation() {
+        return population;
+    }
 }

@@ -32,7 +32,8 @@ public class PopulationLoader {
                 try {
                     int population = Integer.parseInt(popStr);
                     populationMap.put(zip, population);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         } catch (IOException e) {
             System.err.println("Error reading population file: " + e.getMessage());

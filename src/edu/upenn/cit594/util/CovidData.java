@@ -1,4 +1,5 @@
 package edu.upenn.cit594.util;
+
 import java.time.LocalDate;
 
 /*
@@ -21,8 +22,19 @@ public class CovidData {
         this.fullyV = fullyV;
     }
 
-    public String getZipCode() { return zipCode; }
-    public LocalDate getDate() { return date; }
-    public int getPartial() { return partialV; }
-    public int getFull() { return fullyV; }
+    public String getZipCode() {
+        return zipCode;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public int getPartial() {
+        return partialV;
+    }
+
+    public int getFull() {
+        return fullyV;
+    }
 }

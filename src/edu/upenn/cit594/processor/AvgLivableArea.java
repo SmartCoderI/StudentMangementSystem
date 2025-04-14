@@ -1,6 +1,23 @@
 package edu.upenn.cit594.processor;
 
 
-public class AvgLivableArea {
+import edu.upenn.cit594.util.PropertyData;
 
+import java.util.List;
+
+public class AvgLivableArea implements PropertyFunction {
+    @Override
+    public double compute(List<PropertyData> properties) {
+        double sum = 0;
+        int count = 0;
+        for (PropertyData p : properties) {
+            Double area = p.getTotalLivableArea();
+            if (area != null) {
+                sum += area;
+                count++;
+            }
+        }
+        return count == 0 ? 0 : sum / count;
+    }
 }
+

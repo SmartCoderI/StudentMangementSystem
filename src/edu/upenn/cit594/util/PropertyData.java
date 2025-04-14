@@ -18,7 +18,15 @@ public class PropertyData {
         this.totalLivableArea = totalLivableArea;
     }
 
-    public String getZipCode() { return zipCode; }
-    public double getMarketValue() { return marketValue; }
-    public double getTotalLivableArea() { return totalLivableArea; }
+    public String getZipCode() {
+        return zipCode;
+    }
+
+    public double getMarketValue() {
+        return marketValue;
+    }
+
+    public double getTotalLivableArea() {
+        return totalLivableArea;
+    }
 }

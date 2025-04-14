@@ -1,5 +1,7 @@
 package edu.upenn.cit594.ui;
+
 import edu.upenn.cit594.logging.Logger;
+
 import java.util.*;
 
 public class Menu {
