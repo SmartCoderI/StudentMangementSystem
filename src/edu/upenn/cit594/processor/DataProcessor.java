@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class DataProcessor {
-    //private List<PropertyData> properties;
     private final Map<String, Integer> populationMap;
     private final List<PropertyData> properties;
     private final List<CovidData> covidData;
@@ -48,7 +47,6 @@ public DataProcessor(String populationFile, String propertyFile, String covidFil
         return strategy.compute(filtered);
     }
 
-    //a lot more to be added
     public int getTotalPopulation() {
         return populationMap.values().stream().mapToInt(Integer::intValue).sum();
     }
@@ -76,7 +74,7 @@ public DataProcessor(String populationFile, String propertyFile, String covidFil
         }
         return result;
     }
-////
+
     public int getZipStatistic(String zip, PropertyFunction strategy) {
         List<PropertyData> filtered = properties.stream()
                 .filter(p -> p.getZipCode().equals(zip))
@@ -92,5 +90,21 @@ public DataProcessor(String populationFile, String propertyFile, String covidFil
         int population = populationMap.getOrDefault(zip, 0);
         if (population == 0 || totalValue == 0) return 0;
         return (int) (totalValue / population);
+    }
+
+    //custom method: total market value divided by total livable area
+    public double getMarketValuePerSqFt(String zip) {
+        double totalMarketValue = 0;
+        double totalArea = 0;
+
+        for (PropertyData p : properties) {
+            if (p.getZipCode().equals(zip)) {
+                totalMarketValue += p.getMarketValue();
+                totalArea += p.getTotalLivableArea();
+            }
+        }
+
+        if (totalArea == 0) return 0;
+        return totalMarketValue / totalArea;
     }
 }
