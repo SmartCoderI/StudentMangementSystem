@@ -76,7 +76,7 @@ public DataProcessor(String populationFile, String propertyFile, String covidFil
         }
         return result;
     }
-
+////
     public int getZipStatistic(String zip, PropertyFunction strategy) {
         List<PropertyData> filtered = properties.stream()
                 .filter(p -> p.getZipCode().equals(zip))
