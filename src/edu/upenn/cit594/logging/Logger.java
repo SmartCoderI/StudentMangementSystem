@@ -18,24 +18,42 @@ public class Logger {
         return instance;
     }
 
+    /**
+     * Sets or changes the log file output destination.
+     * If it fails, logs will go to System.err.
+     * @param filename log file path (append mode)
+     */
     public void setOutputDestination(String filename) {
         try {
+            // Only close file-based writers (never System.err)
             if (isFile && writer != null) {
                 writer.close();
             }
+
             FileOutputStream fos = new FileOutputStream(filename, true); // append mode
-            writer = new OutputStreamWriter(fos);
+            writer = new PrintWriter(fos);
             isFile = true;
+
         } catch (IOException e) {
             System.err.println("Error initializing logger: " + e.getMessage());
-            writer = new OutputStreamWriter(System.err);
+            writer = new PrintWriter(System.err);
             isFile = false;
         }
     }
 
+    /**
+     * Logs a message with a timestamp.
+     * @param message The message to log.
+     */
     public void log(String message) {
+        long timestamp = System.currentTimeMillis();
+
+        if (writer == null) {
+            writer = new PrintWriter(System.err);
+            isFile = false;
+        }
+
         try {
-            long timestamp = System.currentTimeMillis();
             writer.write(timestamp + " " + message + System.lineSeparator());
             writer.flush();
         } catch (IOException e) {

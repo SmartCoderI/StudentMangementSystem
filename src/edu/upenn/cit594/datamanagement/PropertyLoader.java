@@ -5,54 +5,93 @@ import edu.upenn.cit594.util.PropertyData;
 import java.io.*;
 import java.util.*;
 
-/*
-only provided in csv file, no JSON file
-headers:
-market_value: only use for calc if the data is parsable as numeric value, even as negative or 0
-total_livable area: if parsable as a numerical value
-zip_code: first 5 digits, ignore if first 5 characters are not all numerical, if zipcode less than 5 character
+/**
+ * only provided in csv file, no JSON file
+ * headers:
+ * market_value: only use for calc if the data is parsable as numeric value, even as negative or 0
+ * total_livable area: if parsable as a numerical value
+ * zip_code: first 5 digits, ignore if first 5 characters are not all numerical, if zipcode less than 5 character
  */
 public class PropertyLoader {
-    protected String filename;
+    private final String filename;
+    private List<PropertyData> properties; // Memoization
 
     public PropertyLoader(String filename) {
         this.filename = filename;
     }
 
+    /**
+     * Loads and parses the property data CSV.
+     * Skips rows with bad ZIPs, and handles missing or malformed fields.
+     * @return List of PropertyData
+     */
     public List<PropertyData> loadPropertyData() {
-        List<PropertyData> properties = new ArrayList<>();
+        if (properties != null) { return properties; }
+
+        properties = new ArrayList<>();
+
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String header = br.readLine();
             if (header == null) return properties;
-            String[] columns = header.split(",");
 
-            int zipIndex = -1, valueIndex = -1, areaIndex = -1;
+            // Map column names to indices
+            String[] columns = header.split(",", -1);
+            Map<String, Integer> colIndex = new HashMap<>();
             for (int i = 0; i < columns.length; i++) {
-                String col = columns[i].trim().toLowerCase();
-                if (col.equals("zip_code")) zipIndex = i;
-                if (col.equals("market_value")) valueIndex = i;
-                if (col.equals("total_livable_area")) areaIndex = i;
+                colIndex.put(columns[i].trim().toLowerCase(), i);
             }
 
-            if (zipIndex == -1 || valueIndex == -1 || areaIndex == -1) return properties;
+            Integer zipIndex = colIndex.get("zip_code");
+            Integer valueIndex = colIndex.get("market_value");
+            Integer areaIndex = colIndex.get("total_livable_area");
 
+            if (zipIndex == null || valueIndex == null || areaIndex == null) {
+                System.err.println("Missing required columns in header.");
+                return properties;
+            }
+
+            // Start processing meaningful entries
             String line;
+            int maxIndex = Math.max(zipIndex, Math.max(valueIndex, areaIndex));
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",", -1);
-                if (parts.length <= Math.max(zipIndex, Math.max(valueIndex, areaIndex))) continue;
+                // Row have enough fields to safely access indices
+                if (parts.length <= maxIndex) continue;
 
-                String zip = parts[zipIndex].trim();
+                String zipRaw = parts[zipIndex].trim();
+                String zip = extractFiveDigitZip(zipRaw);
+                if (zip == null) continue;
+
                 if (zip.length() < 5 || !zip.substring(0, 5).matches("\\d{5}")) continue;
-                try {
-                    double value = Double.parseDouble(parts[valueIndex]);
-                    double area = Double.parseDouble(parts[areaIndex]);
-                    properties.add(new PropertyData(zip, value, area));
-                } catch (NumberFormatException ignored) {
-                }
+
+                Double marketValue = parseDoubleSafe(parts[valueIndex].trim());
+                Double livableArea = parseDoubleSafe(parts[areaIndex].trim());
+
+                PropertyData property = new PropertyData(zip, marketValue, livableArea);
+                properties.add(property);
             }
+
         } catch (IOException e) {
             System.err.println("Error reading properties file: " + e.getMessage());
         }
         return properties;
+    }
+
+    private String extractFiveDigitZip(String raw) {
+        if (raw == null) return null;
+
+        if (raw.length() >= 5 && raw.substring(0, 5).matches("\\d{5}")) {
+            String zip = raw.substring(0, 5);
+            return zip;
+        }
+        return null;
+    }
+
+    private Double parseDoubleSafe(String str) {
+        try {
+            return Double.parseDouble(str);
+        } catch (Exception e) {
+            return null; // treat malformed values as missing
+        }
     }
 }

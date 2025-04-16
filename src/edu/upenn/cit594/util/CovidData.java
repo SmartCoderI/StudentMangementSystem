@@ -2,12 +2,12 @@ package edu.upenn.cit594.util;
 
 import java.time.LocalDate;
 
-/*
-headers:
-zipcode
-date: etl_timestamp
-partialV: total # people received first dose in zipcode
-fullyV: total # people received 2nd dose in zipcode
+/**
+ * headers:
+ * zipcode
+ * date: etl_timestamp
+ * partialV: total # people received first dose in zipcode
+ * fullyV: total # people received 2nd dose in zipcode
  */
 public class CovidData {
     private final String zipCode;
