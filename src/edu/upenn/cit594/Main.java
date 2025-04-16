@@ -15,63 +15,71 @@ public class Main {
     private static final Set<String> VALID_ARGS = Set.of("covid", "properties", "population", "log");
 
     public static void main(String[] args) {
+        Map<String, String> arguments = parseArguments(args);
+        if (arguments == null) return;
 
-        Map<String, String> arguments = new HashMap<>();
-        Set<String> providedNames = new HashSet<>();
+        if (!validateFiles(arguments)) return;
 
-        //iterate over arguments
-        for (String arg : args) {
-            //argument needs to be in the format of --name=value
-            Matcher matcher = ARG_PATTERN.matcher(arg);
-            //throw error if not
-            if (!matcher.matches()) {
-                System.err.println("Invalid argument format: " + arg);
-                return;
-            }
-            //extract name and value
-            String name = matcher.group("name").toLowerCase();
-            String value = matcher.group("value");
-
-            //if name isn't covid, properties, population,log, throw error
-            if (!VALID_ARGS.contains(name)) {
-                System.err.println("Invalid argument name: " + name);
-                return;
-            }
-            //if duplicated, throw error
-            if (providedNames.contains(name)) {
-                System.err.println("Duplicate argument: " + name);
-                return;
-            }
-            //valid name, store name and values
-            arguments.put(name, value);
-            providedNames.add(name);
-        }
-
-        //get singleton logger
         Logger logger = Logger.getInstance();
         if (arguments.containsKey("log")) {
             logger.setOutputDestination(arguments.get("log"));
         }
         logger.log(String.join(" ", args));
-        //check input files
+
+        new Menu(arguments).start();
+    }
+
+    private static Map<String, String> parseArguments(String[] args) {
+        Map<String, String> arguments = new HashMap<>();
+        Set<String> providedNames = new HashSet<>();
+
+        for (String arg : args) {
+            Matcher matcher = ARG_PATTERN.matcher(arg);
+            if (!matcher.matches()) {
+                System.err.println("Invalid argument format: " + arg);
+                return null;
+            }
+
+            String name = matcher.group("name").toLowerCase();
+            String value = matcher.group("value");
+
+            if (!VALID_ARGS.contains(name)) {
+                System.err.println("Invalid argument name: " + name);
+                return null;
+            }
+
+            if (!providedNames.add(name)) {
+                System.err.println("Duplicate argument: " + name);
+                return null;
+            }
+
+            arguments.put(name, value);
+        }
+
+        return arguments;
+    }
+
+    private static boolean validateFiles(Map<String, String> arguments) {
+        Logger logger = Logger.getInstance();
+
         for (String key : List.of("covid", "properties", "population")) {
             if (arguments.containsKey(key)) {
                 File file = new File(arguments.get(key));
                 if (!file.exists() || !file.canRead()) {
                     System.err.println("Cannot read file: " + arguments.get(key));
-                    return;
+                    return false;
                 }
                 logger.log(arguments.get(key));
+
                 if (key.equals("covid")) {
                     String name = file.getName().toLowerCase();
                     if (!name.endsWith(".csv") && !name.endsWith(".json")) {
                         System.err.println("COVID file must be .csv or .json");
-                        return;
+                        return false;
                     }
                 }
             }
         }
-        //finally prompt menu
-        new Menu(arguments).start();
+        return true;
     }
 }
