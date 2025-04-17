@@ -35,23 +35,29 @@ public class CovidLoader {
         } else if (filename.toLowerCase().endsWith(".json")) {
             return loadFromJSON();
         } else {
-            return Collections.emptyList();
+            return Collections.emptyList();//or throw error here?
         }
     }
 
     private List<CovidData> loadFromCSV() {
         List<CovidData> records = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+
             String header = br.readLine();
+
             if (header == null) return records;
 
             String[] headers = header.split(",", -1);
+            for (int i = 0; i < headers.length; i++) {
+                headers[i] = headers[i].replaceAll("\"", "").trim().toLowerCase();
+            }
+
             Map<String, Integer> index = new HashMap<>();
+
+
             for (int i = 0; i < headers.length; i++) {
                 index.put(headers[i].trim().toLowerCase(), i);
             }
-            // DEBUG: Print column index map
-            System.out.println("Column Index Map: " + index);
 
 
             int zipIdx = index.getOrDefault("zip_code", -1);
@@ -67,25 +73,32 @@ public class CovidLoader {
 
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",", -1);
-                if (parts.length < maxIndex) continue;
+
+                if (parts.length <= maxIndex) continue;
+
 
                 String zip = parts[zipIdx].trim();
                 String timestamp = parts[timeIdx].trim();
+                timestamp = timestamp.replaceAll("^\"|\"$", "").trim();
 
-                //debug
-                System.out.println("🔍 Raw timestamp: " + timestamp);
+
+                if (!isValidZip(zip)) {
+                    System.out.println("Skipping due to invalid ZIP: " + zip);
+                }
+                if (!isValidTimestamp(timestamp)) {
+                    System.out.println("Skipping due to invalid timestamp: " + timestamp);
+                }
 
                 if (!isValidZip(zip) || !isValidTimestamp(timestamp)) continue;
 
                 zip = parseZipSafe(zip);
                 LocalDate date = parseDateSafe(timestamp, formatter);
+                if (date == null) continue;
+
+
                 int partial = parseIntSafe(parts[partialIdx].trim());
                 int full = parseIntSafe(parts[fullIdx].trim());
 
-                //debug
-                if (date != null && date.equals(LocalDate.of(2021, 4, 10))) {
-                    System.out.println("✅ Loaded 2021-04-10: ZIP=" + zip + ", partial=" + partial + ", full=" + full);
-                }
 
                 records.add(new CovidData(zip, date, partial, full));
             }
@@ -108,6 +121,9 @@ public class CovidLoader {
 
                 String zip = String.valueOf(json.get("zip_code")).trim();
                 String timestamp = String.valueOf(json.get("etl_timestamp")).trim();
+                timestamp = timestamp.replaceAll("^\"|\"$", "").trim();
+
+
                 if (!isValidZip(zip) || !isValidTimestamp(timestamp)) continue;
 
                 zip = parseZipSafe(zip);
@@ -148,6 +164,8 @@ public class CovidLoader {
         } catch (Exception e) {
             return null;
         }
+
+
     }
 
     private int parseIntSafe(String str) {

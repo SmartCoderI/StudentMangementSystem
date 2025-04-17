@@ -50,11 +50,14 @@ public DataProcessor(String populationFile, String propertyFile, String covidFil
     public int getTotalPopulation() {
         return populationMap.values().stream().mapToInt(Integer::intValue).sum();
     }
+
     public Map<String, Double> getVaccinationPerCapita(String type, LocalDate date) {
         Map<String, Integer> zipToVaccination = new HashMap<>();
 
         for (CovidData record : covidData) {
+
             if (record.getDate().equals(date)) {
+
                 int count = type.equals("partial") ? record.getPartial() : record.getFull();
                 if (count > 0 && populationMap.containsKey(record.getZipCode())) {
                     zipToVaccination.put(record.getZipCode(), count);
