@@ -50,6 +50,9 @@ public class CovidLoader {
             for (int i = 0; i < headers.length; i++) {
                 index.put(headers[i].trim().toLowerCase(), i);
             }
+            // DEBUG: Print column index map
+            System.out.println("Column Index Map: " + index);
+
 
             int zipIdx = index.getOrDefault("zip_code", -1);
             int timeIdx = index.getOrDefault("etl_timestamp", -1);
@@ -69,12 +72,20 @@ public class CovidLoader {
                 String zip = parts[zipIdx].trim();
                 String timestamp = parts[timeIdx].trim();
 
+                //debug
+                System.out.println("🔍 Raw timestamp: " + timestamp);
+
                 if (!isValidZip(zip) || !isValidTimestamp(timestamp)) continue;
 
                 zip = parseZipSafe(zip);
                 LocalDate date = parseDateSafe(timestamp, formatter);
                 int partial = parseIntSafe(parts[partialIdx].trim());
                 int full = parseIntSafe(parts[fullIdx].trim());
+
+                //debug
+                if (date != null && date.equals(LocalDate.of(2021, 4, 10))) {
+                    System.out.println("✅ Loaded 2021-04-10: ZIP=" + zip + ", partial=" + partial + ", full=" + full);
+                }
 
                 records.add(new CovidData(zip, date, partial, full));
             }

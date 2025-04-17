@@ -133,7 +133,7 @@ public class Menu {
             System.out.println("0");
         } else {
             for (Map.Entry<String, Double> entry : results.entrySet()) {
-                System.out.printf("%s %.4f%n", entry.getKey(), entry.getValue());
+                System.out.printf("%s %.4f%n", entry.getKey(), entry.getValue());  // show result with 4 decimal places
             }
         }
         System.out.println("END OUTPUT");
@@ -210,9 +210,9 @@ public class Menu {
             return;
         }
 
-        double result = processor.getMarketValuePerSqFt(zip);
+        int result = processor.getMarketValuePerSqFt(zip);
         System.out.println("BEGIN OUTPUT");
-        System.out.printf("%.4f%n", result);  // show result with 4 decimal places
+        System.out.println(result);
         System.out.println("END OUTPUT");
     }
 

@@ -9,10 +9,10 @@ zip_code
  */
 public class PropertyData {
     protected final String zipCode;
-    protected final double marketValue;
-    protected final double totalLivableArea;
+    protected final Double marketValue;
+    protected final Double totalLivableArea;
 
-    public PropertyData(String zipCode, double marketValue, double totalLivableArea) {
+    public PropertyData(String zipCode, Double marketValue, Double totalLivableArea) {
         this.zipCode = zipCode;
         this.marketValue = marketValue;
         this.totalLivableArea = totalLivableArea;
@@ -22,11 +22,11 @@ public class PropertyData {
         return zipCode;
     }
 
-    public double getMarketValue() {
+    public Double getMarketValue() {
         return marketValue;
     }
 
-    public double getTotalLivableArea() {
+    public Double getTotalLivableArea() {
         return totalLivableArea;
     }
 }

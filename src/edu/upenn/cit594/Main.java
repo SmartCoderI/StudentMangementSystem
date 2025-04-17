@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.regex.*;
 
 public class Main {
-    //extract arguments like --poluation=pop.csv
+    //extract arguments like --population=pop.csv
     //--covid=covid.csv --population=pop.csv --log=log.txt
     private static final Pattern ARG_PATTERN = Pattern.compile("^--(?<name>.+?)=(?<value>.+)$");
     //valid argument names

@@ -93,18 +93,26 @@ public DataProcessor(String populationFile, String propertyFile, String covidFil
     }
 
     //custom method: total market value divided by total livable area
-    public double getMarketValuePerSqFt(String zip) {
+    public int getMarketValuePerSqFt(String zip) {
         double totalMarketValue = 0;
-        double totalArea = 0;
+        double totalLivableArea = 0;
 
         for (PropertyData p : properties) {
-            if (p.getZipCode().equals(zip)) {
-                totalMarketValue += p.getMarketValue();
-                totalArea += p.getTotalLivableArea();
+            Double marketValue = p.getMarketValue();
+            Double livableArea = p.getTotalLivableArea();
+
+            if (p != null &&
+                    zip.equals(p.getZipCode()) &&
+                    marketValue != null &&
+                    livableArea != null &&
+                    livableArea > 0) {
+
+                totalMarketValue += marketValue;
+                totalLivableArea += livableArea;
             }
         }
 
-        if (totalArea == 0) return 0;
-        return totalMarketValue / totalArea;
+        if (totalLivableArea == 0) return 0;
+        return (int)(totalMarketValue / totalLivableArea);
     }
 }

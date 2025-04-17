@@ -7,7 +7,7 @@ import java.util.List;
 
 public class AvgLivableArea implements PropertyFunction {
     @Override
-    public double compute(List<PropertyData> properties) {
+    public int compute(List<PropertyData> properties) {
         double sum = 0;
         int count = 0;
         for (PropertyData p : properties) {
@@ -17,7 +17,7 @@ public class AvgLivableArea implements PropertyFunction {
                 count++;
             }
         }
-        return count == 0 ? 0 : sum / count;
+        return count == 0 ? 0 : (int)(sum / count);
     }
 }
 
