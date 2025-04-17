@@ -1,9 +1,15 @@
 package edu.upenn.cit594.datamanagement;
 
+import edu.upenn.cit594.logging.Logger;
 import edu.upenn.cit594.util.PropertyData;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * only provided in csv file, no JSON file
@@ -23,12 +29,17 @@ public class PropertyLoader {
     /**
      * Loads and parses the property data CSV.
      * Skips rows with bad ZIPs, and handles missing or malformed fields.
+     *
      * @return List of PropertyData
      */
     public List<PropertyData> loadPropertyData() {
-        if (properties != null) { return properties; }
+        if (properties != null) {
+            return properties;
+        }
 
         properties = new ArrayList<>();
+
+        Logger.getInstance().log(filename);
 
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String header = br.readLine();

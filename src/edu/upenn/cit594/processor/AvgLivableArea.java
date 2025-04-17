@@ -17,7 +17,7 @@ public class AvgLivableArea implements PropertyFunction {
                 count++;
             }
         }
-        return count == 0 ? 0 : (int)(sum / count);
+        return count == 0 ? 0 : (int) (sum / count);
     }
 }
 

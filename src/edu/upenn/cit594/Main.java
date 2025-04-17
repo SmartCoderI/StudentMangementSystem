@@ -1,11 +1,12 @@
 package edu.upenn.cit594;
 
-import edu.upenn.cit594.ui.Menu;
 import edu.upenn.cit594.logging.Logger;
+import edu.upenn.cit594.ui.Menu;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
     //extract arguments like --population=pop.csv
@@ -69,7 +70,10 @@ public class Main {
                     System.err.println("Cannot read file: " + arguments.get(key));
                     return false;
                 }
-                logger.log(arguments.get(key));
+                // I commented out the log activity since according to the spec: we log The name of the input file each time a file is opened for reading.
+                // This is not the time of reading a file, it is just validation
+                // I updated the loader accordingly
+                // logger.log(arguments.get(key));
 
                 if (key.equals("covid")) {
                     String name = file.getName().toLowerCase();

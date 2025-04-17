@@ -1,8 +1,9 @@
 package edu.upenn.cit594.ui;
 
 import edu.upenn.cit594.logging.Logger;
-import edu.upenn.cit594.processor.*;
-import edu.upenn.cit594.util.*;
+import edu.upenn.cit594.processor.AvgLivableArea;
+import edu.upenn.cit594.processor.AvgMktValue;
+import edu.upenn.cit594.processor.DataProcessor;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;

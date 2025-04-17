@@ -21,6 +21,7 @@ public class Logger {
     /**
      * Sets or changes the log file output destination.
      * If it fails, logs will go to System.err.
+     *
      * @param filename log file path (append mode)
      */
     public void setOutputDestination(String filename) {
@@ -43,6 +44,7 @@ public class Logger {
 
     /**
      * Logs a message with a timestamp.
+     *
      * @param message The message to log.
      */
     public void log(String message) {

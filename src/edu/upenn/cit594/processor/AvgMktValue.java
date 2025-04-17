@@ -2,6 +2,7 @@ package edu.upenn.cit594.processor;
 
 
 import edu.upenn.cit594.util.PropertyData;
+
 import java.util.List;
 
 public class AvgMktValue implements PropertyFunction {
@@ -16,7 +17,7 @@ public class AvgMktValue implements PropertyFunction {
                 count++;
             }
         }
-        return count == 0 ? 0 : (int)(sum / count);
+        return count == 0 ? 0 : (int) (sum / count);
     }
 }
 

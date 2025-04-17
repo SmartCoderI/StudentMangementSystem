@@ -1,15 +1,18 @@
 package edu.upenn.cit594.datamanagement;
 
-import java.io.*;
+import edu.upenn.cit594.logging.Logger;
+import edu.upenn.cit594.util.CovidData;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.Reader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-
-import edu.upenn.cit594.util.CovidData;
-import org.json.simple.*;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 /**
  * JSON or CSV
@@ -40,6 +43,7 @@ public class CovidLoader {
     }
 
     private List<CovidData> loadFromCSV() {
+        Logger.getInstance().log(filename);
         List<CovidData> records = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
 
@@ -54,11 +58,9 @@ public class CovidLoader {
 
             Map<String, Integer> index = new HashMap<>();
 
-
             for (int i = 0; i < headers.length; i++) {
                 index.put(headers[i].trim().toLowerCase(), i);
             }
-
 
             int zipIdx = index.getOrDefault("zip_code", -1);
             int timeIdx = index.getOrDefault("etl_timestamp", -1);
@@ -82,12 +84,12 @@ public class CovidLoader {
                 timestamp = timestamp.replaceAll("^\"|\"$", "").trim();
 
 
-                if (!isValidZip(zip)) {
-                    System.out.println("Skipping due to invalid ZIP: " + zip);
-                }
-                if (!isValidTimestamp(timestamp)) {
-                    System.out.println("Skipping due to invalid timestamp: " + timestamp);
-                }
+//                if (!isValidZip(zip)) {
+//                    System.out.println("Skipping due to invalid ZIP: " + zip);
+//                }
+//                if (!isValidTimestamp(timestamp)) {
+//                    System.out.println("Skipping due to invalid timestamp: " + timestamp);
+//                }
 
                 if (!isValidZip(zip) || !isValidTimestamp(timestamp)) continue;
 
@@ -105,10 +107,12 @@ public class CovidLoader {
         } catch (Exception e) {
             System.err.println("Error reading COVID CSV file: " + e.getMessage());
         }
+        this.data = records; // for memorization
         return records;
     }
 
     private List<CovidData> loadFromJSON() {
+        Logger.getInstance().log(filename);
         List<CovidData> records = new ArrayList<>();
         JSONParser parser = new JSONParser();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -128,6 +132,8 @@ public class CovidLoader {
 
                 zip = parseZipSafe(zip);
                 LocalDate date = parseDateSafe(timestamp, formatter);
+                if (date == null) continue;
+
                 int partial = parseIntSafe(String.valueOf(json.get("partially_vaccinated")).trim());
                 int full = parseIntSafe(String.valueOf(json.get("fully_vaccinated")).trim());
 
@@ -137,6 +143,7 @@ public class CovidLoader {
         } catch (Exception e) {
             System.err.println("Error reading COVID JSON file: " + e.getMessage());
         }
+        this.data = records; // for memorization
         return records;
     }
 
@@ -154,18 +161,16 @@ public class CovidLoader {
 
     private String parseZipSafe(String raw) {
         if (raw == null) return null;
-       return raw.substring(0, 5);
+        return raw.substring(0, 5);
     }
 
     private LocalDate parseDateSafe(String raw, DateTimeFormatter formatter) {
         try {
             if (raw == null || formatter == null) return null;
-            return  LocalDateTime.parse(raw, formatter).toLocalDate();
+            return LocalDateTime.parse(raw, formatter).toLocalDate();
         } catch (Exception e) {
             return null;
         }
-
-
     }
 
     private int parseIntSafe(String str) {

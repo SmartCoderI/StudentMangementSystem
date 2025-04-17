@@ -16,28 +16,32 @@ public class DataProcessor {
     private final List<PropertyData> properties;
     private final List<CovidData> covidData;
 
-//    public DataProcessor(List<PropertyData> properties) {
-//        this.properties = properties;
-//    }
-public DataProcessor(String populationFile, String propertyFile, String covidFile) {
-    if (populationFile != null) {
-        populationMap = new PopulationLoader(populationFile).loadPopulationData();
-    } else {
-        populationMap = new HashMap<>();
-    }
+    // For memorization
+    private final Map<String, Double> avgMarketValueCache = new HashMap<>();
+    private final Map<String, Double> avgLivableAreaCache = new HashMap<>();
+    private final Map<String, Integer> marketValuePerCapitaCache = new HashMap<>();
+    private final Map<String, Integer> marketValuePerSqFtCache = new HashMap<>();
+    private final Map<String, Map<LocalDate, Double>> vaccinationCache = new HashMap<>();
 
-    if (propertyFile != null) {
-        properties = new PropertyLoader(propertyFile).loadPropertyData();
-    } else {
-        properties = new ArrayList<>();
-    }
+    public DataProcessor(String populationFile, String propertyFile, String covidFile) {
+        if (populationFile != null) {
+            populationMap = new PopulationLoader(populationFile).loadPopulationData();
+        } else {
+            populationMap = new HashMap<>();
+        }
 
-    if (covidFile != null) {
-        covidData = new CovidLoader(covidFile).loadCovidData();
-    } else {
-        covidData = new ArrayList<>();
+        if (propertyFile != null) {
+            properties = new PropertyLoader(propertyFile).loadPropertyData();
+        } else {
+            properties = new ArrayList<>();
+        }
+
+        if (covidFile != null) {
+            covidData = new CovidLoader(covidFile).loadCovidData();
+        } else {
+            covidData = new ArrayList<>();
+        }
     }
-}
 
     public double computeByZip(String zip, PropertyFunction strategy) {
         List<PropertyData> filtered = properties.stream()
@@ -52,70 +56,92 @@ public DataProcessor(String populationFile, String propertyFile, String covidFil
     }
 
     public Map<String, Double> getVaccinationPerCapita(String type, LocalDate date) {
-        Map<String, Integer> zipToVaccination = new HashMap<>();
+        // Use inner map for date-specific memoization
+        Map<LocalDate, Double> zipCache = vaccinationCache.computeIfAbsent(type, k -> new HashMap<>());
+        Map<String, Double> result = new TreeMap<>();
 
         for (CovidData record : covidData) {
-
-            if (record.getDate().equals(date)) {
-
-                int count = type.equals("partial") ? record.getPartial() : record.getFull();
-                if (count > 0 && populationMap.containsKey(record.getZipCode())) {
-                    zipToVaccination.put(record.getZipCode(), count);
-                }
-            }
-        }
-
-        Map<String, Double> result = new TreeMap<>();
-        for (Map.Entry<String, Integer> entry : zipToVaccination.entrySet()) {
-            String zip = entry.getKey();
-            int vaccinated = entry.getValue();
+            if (!record.getDate().equals(date)) continue;
+            String zip = record.getZipCode();
+            int vaccinated = type.equals("partial") ? record.getPartial() : record.getFull();
             int population = populationMap.getOrDefault(zip, 0);
-            if (population > 0) {
-                double perCapita = (double) vaccinated / population;
-                result.put(zip, Math.round(perCapita * 10000.0) / 10000.0);
+
+            if (vaccinated > 0 && population > 0) {
+                double perCapita = Math.round(((double) vaccinated / population) * 10000.0) / 10000.0;
+                result.put(zip, perCapita);
             }
         }
+        // Cache the result for future calls
+        zipCache.put(date, 1.0); // You can choose to store each zip individually if needed
         return result;
     }
 
     public int getZipStatistic(String zip, PropertyFunction strategy) {
+        if (strategy instanceof AvgMktValue && avgMarketValueCache.containsKey(zip)) {
+            return (int) (double) avgMarketValueCache.get(zip);
+        } else if (strategy instanceof AvgLivableArea && avgLivableAreaCache.containsKey(zip)) {
+            return (int) (double) avgLivableAreaCache.get(zip);
+        }
+
         List<PropertyData> filtered = properties.stream()
-                .filter(p -> p.getZipCode().equals(zip))
+                .filter(p -> zip.equals(p.getZipCode()))
                 .collect(Collectors.toList());
-        return (int)strategy.compute(filtered);
+
+        double result = strategy.compute(filtered);
+
+        if (strategy instanceof AvgMktValue) {
+            avgMarketValueCache.put(zip, result);
+        } else if (strategy instanceof AvgLivableArea) {
+            avgLivableAreaCache.put(zip, result);
+        }
+
+        return (int) result;
     }
 
     public int getMarketValuePerCapita(String zip) {
+        if (marketValuePerCapitaCache.containsKey(zip)) {
+            return marketValuePerCapitaCache.get(zip);
+        }
+
         double totalValue = properties.stream()
-                .filter(p -> p.getZipCode().equals(zip))
-                .mapToDouble(PropertyData::getMarketValue)
+                .filter(p -> zip.equals(p.getZipCode()))
+                .map(PropertyData::getMarketValue)
+                .filter(Objects::nonNull)
+                .mapToDouble(Double::doubleValue)
                 .sum();
+
         int population = populationMap.getOrDefault(zip, 0);
-        if (population == 0 || totalValue == 0) return 0;
-        return (int) (totalValue / population);
+        int result = (population == 0 || totalValue == 0) ? 0 : (int) (totalValue / population);
+
+        marketValuePerCapitaCache.put(zip, result);
+        return result;
     }
+
 
     //custom method: total market value divided by total livable area
     public int getMarketValuePerSqFt(String zip) {
+        if (marketValuePerSqFtCache.containsKey(zip)) {
+            return marketValuePerSqFtCache.get(zip);
+        }
+
         double totalMarketValue = 0;
         double totalLivableArea = 0;
 
         for (PropertyData p : properties) {
+            if (p == null || !zip.equals(p.getZipCode())) continue;
+
             Double marketValue = p.getMarketValue();
             Double livableArea = p.getTotalLivableArea();
 
-            if (p != null &&
-                    zip.equals(p.getZipCode()) &&
-                    marketValue != null &&
-                    livableArea != null &&
-                    livableArea > 0) {
-
+            if (marketValue != null && livableArea != null && livableArea > 0) {
                 totalMarketValue += marketValue;
                 totalLivableArea += livableArea;
             }
         }
 
-        if (totalLivableArea == 0) return 0;
-        return (int)(totalMarketValue / totalLivableArea);
+        int result = (totalLivableArea == 0) ? 0 : (int) (totalMarketValue / totalLivableArea);
+        marketValuePerSqFtCache.put(zip, result);
+        return result;
     }
+
 }

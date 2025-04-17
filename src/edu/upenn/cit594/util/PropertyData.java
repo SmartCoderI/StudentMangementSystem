@@ -8,9 +8,9 @@ total_livable area
 zip_code
  */
 public class PropertyData {
-    protected final String zipCode;
-    protected final Double marketValue;
-    protected final Double totalLivableArea;
+    private final String zipCode;
+    private final Double marketValue;
+    private final Double totalLivableArea;
 
     public PropertyData(String zipCode, Double marketValue, Double totalLivableArea) {
         this.zipCode = zipCode;
