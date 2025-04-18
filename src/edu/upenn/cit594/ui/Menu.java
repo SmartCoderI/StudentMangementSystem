@@ -85,19 +85,84 @@ public class Menu {
     }
 
     private void handleSelection(int selection) {
+//        processor.clearCache();
+//        switch (selection) {
+//            case 1 -> showAvailableActions();
+//            case 2 -> {
+//                System.out.println("BEGIN OUTPUT");
+//                System.out.println(processor.getTotalPopulation());
+//                System.out.println("END OUTPUT");
+//            }
+//            case 3 -> handleVaccinationPerCapita();
+//            case 4 -> handleAverageMarketValue();
+//            case 5 -> handleAverageLivableArea();
+//            case 6 -> handleMarketValuePerCapita();
+//            case 7 -> handleCustomFeature();
+//            default -> System.out.println("Unknown action.");
+//        }
+        boolean completed = false;
+
         switch (selection) {
-            case 1 -> showAvailableActions();
-            case 2 -> {
-                System.out.println("BEGIN OUTPUT");
-                System.out.println(processor.getTotalPopulation());
-                System.out.println("END OUTPUT");
+            case 1 -> {
+                showAvailableActions();
+                completed = true;
             }
-            case 3 -> handleVaccinationPerCapita();
-            case 4 -> handleAverageMarketValue();
-            case 5 -> handleAverageLivableArea();
-            case 6 -> handleMarketValuePerCapita();
-            case 7 -> handleCustomFeature();
+            case 2 -> {
+                if (!arguments.containsKey("population")) {
+                    System.out.println("Population data is not available.");
+                } else {
+                    System.out.println("BEGIN OUTPUT");
+                    System.out.println(processor.getTotalPopulation());
+                    System.out.println("END OUTPUT");
+                    completed = true;
+                }
+            }
+            case 3 -> {
+                if (!arguments.containsKey("population") || !arguments.containsKey("covid")) {
+                    System.out.println("Required COVID or population data is missing.");
+                } else {
+                    handleVaccinationPerCapita();
+                    completed = true;
+                }
+            }
+            case 4 -> {
+                if (!arguments.containsKey("properties")) {
+                    System.out.println("Property data is not available.");
+                } else {
+                    handleAverageMarketValue();
+                    completed = true;
+                }
+            }
+            case 5 -> {
+                if (!arguments.containsKey("properties")) {
+                    System.out.println("Property data is not available.");
+                } else {
+                    handleAverageLivableArea();
+                    completed = true;
+                }
+            }
+            case 6 -> {
+                if (!arguments.containsKey("properties") || !arguments.containsKey("population")) {
+                    System.out.println("Required property or population data is missing.");
+                } else {
+                    handleMarketValuePerCapita();
+                    completed = true;
+                }
+            }
+            case 7 -> {
+                if (!arguments.keySet().containsAll(Set.of("properties", "population", "covid"))) {
+                    System.out.println("All three datasets are required for this feature.");
+                } else {
+                    handleCustomFeature();
+                    completed = true;
+                }
+            }
             default -> System.out.println("Unknown action.");
+        }
+
+        // Always re-show the menu after action attempt
+        if (completed) {
+            printMenu();
         }
     }
 
