@@ -64,6 +64,7 @@ public class Menu {
     }
 
     private void printMenu() {
+
         System.out.println("Menu:");
         System.out.println("0. Exit the program.");
         System.out.println("1. Show the available actions.");
@@ -76,7 +77,7 @@ public class Menu {
     }
 
     private void showAvailableActions() {
-        System.out.println("BEGIN OUTPUT");
+        System.out.println("\nBEGIN OUTPUT");
         Collections.sort(availableActions);
         for (int action : availableActions) {
             System.out.println(action);
@@ -111,7 +112,7 @@ public class Menu {
                 if (!arguments.containsKey("population")) {
                     System.out.println("Population data is not available.");
                 } else {
-                    System.out.println("BEGIN OUTPUT");
+                    System.out.println("\nBEGIN OUTPUT");
                     System.out.println(processor.getTotalPopulation());
                     System.out.println("END OUTPUT");
                     completed = true;
@@ -194,7 +195,7 @@ public class Menu {
         }
 
         Map<String, Double> results = processor.getVaccinationPerCapita(type, date);
-        System.out.println("BEGIN OUTPUT");
+        System.out.println("\nBEGIN OUTPUT");
         if (results.isEmpty()) {
             System.out.println("0");
         } else {
@@ -219,7 +220,7 @@ public class Menu {
         }
 
         int result = processor.getAvgMarketValue(zip, new AvgMktValue());
-        System.out.println("BEGIN OUTPUT");
+        System.out.println("\nBEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");
     }
@@ -238,7 +239,7 @@ public class Menu {
         }
 
         int result = processor.getAvgMarketValue(zip, new AvgLivableArea());
-        System.out.println("BEGIN OUTPUT");
+        System.out.println("\nBEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");
     }
@@ -257,7 +258,7 @@ public class Menu {
         }
 
         int result = processor.getMarketValuePerCapita(zip);
-        System.out.println("BEGIN OUTPUT");
+        System.out.println("\nBEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");
     }
@@ -277,7 +278,7 @@ public class Menu {
         }
 
         int result = processor.getMarketValuePerSqFt(zip);
-        System.out.println("BEGIN OUTPUT");
+        System.out.println("\nBEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");
     }
