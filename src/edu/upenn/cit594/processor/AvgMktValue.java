@@ -15,9 +15,21 @@ public class AvgMktValue implements PropertyFunction {
             if (value != null) {
                 sum += value;
                 count++;
+
+                //debug
+                System.out.println(" Used MV: " + value + " for ZIP: " + p.getZipCode());
             }
         }
+
+        //debug
+        if (!properties.isEmpty()) {
+            System.out.println(" Total count used for ZIP " + properties.get(0).getZipCode() + ": " + count);
+            System.out.println(" Total sum for ZIP " + properties.get(0).getZipCode() + ": " + sum);
+        }
+
         return count == 0 ? 0 : (int) (sum / count);
+
+
     }
 }
 

@@ -218,7 +218,7 @@ public class Menu {
             return;
         }
 
-        int result = processor.getZipStatistic(zip, new AvgMktValue());
+        int result = processor.getAvgMarketValue(zip, new AvgMktValue());
         System.out.println("BEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");
@@ -237,7 +237,7 @@ public class Menu {
             return;
         }
 
-        int result = processor.getZipStatistic(zip, new AvgLivableArea());
+        int result = processor.getAvgMarketValue(zip, new AvgLivableArea());
         System.out.println("BEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");

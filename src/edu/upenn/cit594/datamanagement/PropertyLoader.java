@@ -78,8 +78,11 @@ public class PropertyLoader {
                 Double marketValue = parseDoubleSafe(parts[valueIndex].trim());
                 Double livableArea = parseDoubleSafe(parts[areaIndex].trim());
 
+                if (marketValue == null && livableArea == null) continue;
+
                 PropertyData property = new PropertyData(zip, marketValue, livableArea);
-                properties.add(property);
+                //properties.add(property);
+                properties.add(new PropertyData(zip, marketValue, livableArea));
             }
 
         } catch (IOException e) {
@@ -89,7 +92,7 @@ public class PropertyLoader {
     }
 
     private String extractFiveDigitZip(String raw) {
-        if (raw == null) return null;
+        if (raw == null || raw.length() < 5) return null;
 
         if (raw.length() >= 5 && raw.substring(0, 5).matches("\\d{5}")) {
             String zip = raw.substring(0, 5);
@@ -100,9 +103,12 @@ public class PropertyLoader {
 
     private Double parseDoubleSafe(String str) {
         try {
+            // Remove dollar signs, commas, quotes, and spaces
+            str = str.replaceAll("[^\\d.\\-]", "");  // keeps digits, dot, and minus sign
+            if (str.isEmpty()) return null; // prevent parse exception
             return Double.parseDouble(str);
         } catch (Exception e) {
-            return null; // treat malformed values as missing
+            return null;
         }
     }
 }

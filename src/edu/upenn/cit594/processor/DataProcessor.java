@@ -55,6 +55,7 @@ public class DataProcessor {
         return populationMap.values().stream().mapToInt(Integer::intValue).sum();
     }
 
+    //3
     public Map<String, Double> getVaccinationPerCapita(String type, LocalDate date) {
         // Use inner map for date-specific memoization
         Map<LocalDate, Double> zipCache = vaccinationCache.computeIfAbsent(type, k -> new HashMap<>());
@@ -76,7 +77,8 @@ public class DataProcessor {
         return result;
     }
 
-    public int getZipStatistic(String zip, PropertyFunction strategy) {
+    //4
+    public int getAvgMarketValue(String zip, PropertyFunction strategy) {
         if (strategy instanceof AvgMktValue && avgMarketValueCache.containsKey(zip)) {
             return (int) (double) avgMarketValueCache.get(zip);
         } else if (strategy instanceof AvgLivableArea && avgLivableAreaCache.containsKey(zip)) {
@@ -98,6 +100,7 @@ public class DataProcessor {
         return (int) result;
     }
 
+    //6
     public int getMarketValuePerCapita(String zip) {
         if (marketValuePerCapitaCache.containsKey(zip)) {
             return marketValuePerCapitaCache.get(zip);
@@ -142,6 +145,11 @@ public class DataProcessor {
         int result = (totalLivableArea == 0) ? 0 : (int) (totalMarketValue / totalLivableArea);
         marketValuePerSqFtCache.put(zip, result);
         return result;
+    }
+
+    public void clearCache() {
+        avgMarketValueCache.clear();
+        avgLivableAreaCache.clear();
     }
 
 }
