@@ -11,7 +11,7 @@ public class AvgMktValue implements PropertyFunction {
         double sum = 0;
         int count = 0;
         for (PropertyData p : properties) {
-            Double value = p.getMarketValue();
+            Double value = p.getParsedMarketValue();
             if (value != null) {
                 sum += value;
                 count++;
@@ -26,7 +26,8 @@ public class AvgMktValue implements PropertyFunction {
 //            System.out.println(" Total count used for ZIP " + properties.get(0).getZipCode() + ": " + count);
 //            System.out.println(" Total sum for ZIP " + properties.get(0).getZipCode() + ": " + sum);
 //        }
-
+        System.out.println(sum);
+        System.out.println(count);
         return count == 0 ? 0 : (int) (sum / count);
 
 

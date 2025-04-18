@@ -89,6 +89,8 @@ public class DataProcessor {
                 .filter(p -> zip.equals(p.getZipCode()))
                 .collect(Collectors.toList());
 
+        System.out.println("filter size:" + filtered.size());
+
         double result = strategy.compute(filtered);
 
         if (strategy instanceof AvgMktValue) {
@@ -108,7 +110,7 @@ public class DataProcessor {
 
         double totalValue = properties.stream()
                 .filter(p -> zip.equals(p.getZipCode()))
-                .map(PropertyData::getMarketValue)
+                .map(PropertyData::getParsedMarketValue)
                 .filter(Objects::nonNull)
                 .mapToDouble(Double::doubleValue)
                 .sum();
@@ -133,8 +135,8 @@ public class DataProcessor {
         for (PropertyData p : properties) {
             if (p == null || !zip.equals(p.getZipCode())) continue;
 
-            Double marketValue = p.getMarketValue();
-            Double livableArea = p.getTotalLivableArea();
+            Double marketValue = p.getParsedMarketValue();
+            Double livableArea = p.getParsedLivableArea();
 
             if (marketValue != null && livableArea != null && livableArea > 0) {
                 totalMarketValue += marketValue;

@@ -11,7 +11,7 @@ public class AvgLivableArea implements PropertyFunction {
         double sum = 0;
         int count = 0;
         for (PropertyData p : properties) {
-            Double area = p.getTotalLivableArea();
+            Double area = p.getParsedLivableArea();
             if (area != null) {
                 sum += area;
                 count++;
