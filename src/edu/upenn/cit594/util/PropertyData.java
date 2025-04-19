@@ -1,11 +1,11 @@
 package edu.upenn.cit594.util;
 
-/*
-only provided in csv file, no JSON file
-headers:
-market_value
-total_livable area
-zip_code
+/**
+ * only provided in csv file, no JSON file
+ * headers:
+ * market_value
+ * total_livable area
+ * zip_code
  */
 public class PropertyData {
     private final String zipCode;
@@ -22,6 +22,9 @@ public class PropertyData {
         return zipCode;
     }
 
+    /**
+     * @return String-parsed-to-num value; otherwise null
+     */
     public Double getParsedMarketValue() {
         try {
             return Double.parseDouble(marketValueRaw.trim());
@@ -30,6 +33,9 @@ public class PropertyData {
         }
     }
 
+    /**
+     * @return String-parsed-to-num value; otherwise null
+     */
     public Double getParsedLivableArea() {
         try {
             return Double.parseDouble(livableAreaRaw.trim());

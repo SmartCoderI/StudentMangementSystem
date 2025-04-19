@@ -1,6 +1,5 @@
 package edu.upenn.cit594.processor;
 
-
 import edu.upenn.cit594.datamanagement.CovidLoader;
 import edu.upenn.cit594.datamanagement.PopulationLoader;
 import edu.upenn.cit594.datamanagement.PropertyLoader;
@@ -20,8 +19,8 @@ public class DataProcessor {
     private final Map<String, Double> avgMarketValueCache = new HashMap<>();
     private final Map<String, Double> avgLivableAreaCache = new HashMap<>();
     private final Map<String, Integer> marketValuePerCapitaCache = new HashMap<>();
-    private final Map<String, Integer> marketValuePerSqFtCache = new HashMap<>();
-    private final Map<String, Map<LocalDate, Double>> vaccinationCache = new HashMap<>();
+    private final Map<String, String> customFeatureCache = new HashMap<>();
+    private final Map<String, Map<LocalDate, Map<String, Double>>> vaccinationCache = new HashMap<>();
 
     public DataProcessor(String populationFile, String propertyFile, String covidFile) {
         if (populationFile != null) {
@@ -43,22 +42,19 @@ public class DataProcessor {
         }
     }
 
-    public double computeByZip(String zip, PropertyFunction strategy) {
-        List<PropertyData> filtered = properties.stream()
-                .filter(p -> zip.equals(p.getZipCode()))
-                .collect(Collectors.toList());
-
-        return strategy.compute(filtered);
-    }
-
+    // Feature 2: total population for all Zip codes
     public int getTotalPopulation() {
         return populationMap.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    //3
+    // Feature 3: total specified vaccinations per capital for each Zip code for the input date
     public Map<String, Double> getVaccinationPerCapita(String type, LocalDate date) {
-        // Use inner map for date-specific memoization
-        Map<LocalDate, Double> zipCache = vaccinationCache.computeIfAbsent(type, k -> new HashMap<>());
+        Map<LocalDate, Map<String, Double>> innerCache = vaccinationCache.computeIfAbsent(type, k -> new HashMap<>());
+
+        if (innerCache.containsKey(date)) {
+            return innerCache.get(date);
+        }
+
         Map<String, Double> result = new TreeMap<>();
 
         for (CovidData record : covidData) {
@@ -73,25 +69,31 @@ public class DataProcessor {
             }
         }
         // Cache the result for future calls
-        zipCache.put(date, 1.0); // You can choose to store each zip individually if needed
+        innerCache.put(date, result);
         return result;
     }
 
-    //4
-    public int getAvgMarketValue(String zip, PropertyFunction strategy) {
+    // Feature 4 (avg market value given Zip)
+    // and Feature 5 (avg livable area given Zip)
+    // Depending on input PropertyFunction strategy
+    public int getPropertyAvg(String zip, PropertyFunction strategy) {
         if (strategy instanceof AvgMktValue && avgMarketValueCache.containsKey(zip)) {
             return (int) (double) avgMarketValueCache.get(zip);
         } else if (strategy instanceof AvgLivableArea && avgLivableAreaCache.containsKey(zip)) {
             return (int) (double) avgLivableAreaCache.get(zip);
         }
 
-        List<PropertyData> filtered = properties.stream()
+        List<PropertyData> filteredByZip = properties.stream()
                 .filter(p -> zip.equals(p.getZipCode()))
                 .collect(Collectors.toList());
 
-        System.out.println("filter size:" + filtered.size());
+        double result;
 
-        double result = strategy.compute(filtered);
+        if (filteredByZip.size() > 0) {
+            result = strategy.computeAverage(filteredByZip);
+        } else {
+            result = 0.0;
+        }
 
         if (strategy instanceof AvgMktValue) {
             avgMarketValueCache.put(zip, result);
@@ -102,7 +104,7 @@ public class DataProcessor {
         return (int) result;
     }
 
-    //6
+    // Feature 6: total mkt value of properties, per capita, given Zip
     public int getMarketValuePerCapita(String zip) {
         if (marketValuePerCapitaCache.containsKey(zip)) {
             return marketValuePerCapitaCache.get(zip);
@@ -122,18 +124,22 @@ public class DataProcessor {
         return result;
     }
 
-
-    //custom method: total market value divided by total livable area
-    public int getMarketValuePerSqFt(String zip) {
-        if (marketValuePerSqFtCache.containsKey(zip)) {
-            return marketValuePerSqFtCache.get(zip);
+    // Feature 7: custom method, given zip input, output corresponding value per area unit and latest available vac (half and fully) ratio
+    public String getCustom(String zip) {
+        if (customFeatureCache.containsKey(zip)) {
+            return customFeatureCache.get(zip);
         }
+
+        // Value per area unit
+        List<PropertyData> valueFilteredByZip = properties.stream()
+                .filter(p -> zip.equals(p.getZipCode()))
+                .collect(Collectors.toList());
 
         double totalMarketValue = 0;
         double totalLivableArea = 0;
 
-        for (PropertyData p : properties) {
-            if (p == null || !zip.equals(p.getZipCode())) continue;
+        for (PropertyData p : valueFilteredByZip) {
+            if (p == null) continue;
 
             Double marketValue = p.getParsedMarketValue();
             Double livableArea = p.getParsedLivableArea();
@@ -144,14 +150,37 @@ public class DataProcessor {
             }
         }
 
-        int result = (totalLivableArea == 0) ? 0 : (int) (totalMarketValue / totalLivableArea);
-        marketValuePerSqFtCache.put(zip, result);
+        int unitValue = (totalLivableArea == 0) ? 0 : (int) (totalMarketValue / totalLivableArea);
+
+        // Latest vaccination record
+        CovidData mostRecentCovidData = covidData.stream()
+                .filter(c -> zip.equals(c.getZipCode()))
+                .max(Comparator.comparing(CovidData::getDate))
+                .orElse(null);
+
+        int totalPopulation = populationMap.getOrDefault(zip, 0);
+
+        String unitValueResult = (unitValue == 0) ?
+                "No property data for the area " + zip + ". "
+                : zip + " area has an average livable area market price of $" +
+                unitValue + " per area unit. ";
+
+        String covidResult;
+
+        if (mostRecentCovidData != null) {
+            double vacRatioRaw = (double) (mostRecentCovidData.getFull() + mostRecentCovidData.getPartial()) / totalPopulation;
+            int vacRatioPercent = (int) Math.round(vacRatioRaw * 100);
+            covidResult = "This area has the latest vaccination ratio of "
+                    + vacRatioPercent
+                    + "% as of "
+                    + mostRecentCovidData.getDate().toString() + ".";
+        } else {
+            covidResult = "No vaccination for the area.";
+        }
+
+        String result = unitValueResult + covidResult;
+
+        customFeatureCache.put(zip, result);
         return result;
     }
-
-    public void clearCache() {
-        avgMarketValueCache.clear();
-        avgLivableAreaCache.clear();
-    }
-
 }

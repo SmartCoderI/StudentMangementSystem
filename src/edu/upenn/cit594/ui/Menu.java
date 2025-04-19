@@ -64,7 +64,6 @@ public class Menu {
     }
 
     private void printMenu() {
-
         System.out.println("Menu:");
         System.out.println("0. Exit the program.");
         System.out.println("1. Show the available actions.");
@@ -73,7 +72,7 @@ public class Menu {
         System.out.println("4. Show the average market value for properties in a specified ZIP Code.");
         System.out.println("5. Show the average total livable area for properties in a specified ZIP Code.");
         System.out.println("6. Show the total market value of properties, per capita, for a specified ZIP Code.");
-        System.out.println("7. Show the results of market value per livable square feet.");
+        System.out.println("7. Show the average market value per livable area for properties and latest avaibale vaccination ratio in a specified ZIP Code.");
     }
 
     private void showAvailableActions() {
@@ -86,21 +85,6 @@ public class Menu {
     }
 
     private void handleSelection(int selection) {
-//        processor.clearCache();
-//        switch (selection) {
-//            case 1 -> showAvailableActions();
-//            case 2 -> {
-//                System.out.println("BEGIN OUTPUT");
-//                System.out.println(processor.getTotalPopulation());
-//                System.out.println("END OUTPUT");
-//            }
-//            case 3 -> handleVaccinationPerCapita();
-//            case 4 -> handleAverageMarketValue();
-//            case 5 -> handleAverageLivableArea();
-//            case 6 -> handleMarketValuePerCapita();
-//            case 7 -> handleCustomFeature();
-//            default -> System.out.println("Unknown action.");
-//        }
         boolean completed = false;
 
         switch (selection) {
@@ -219,7 +203,7 @@ public class Menu {
             return;
         }
 
-        int result = processor.getAvgMarketValue(zip, new AvgMktValue());
+        int result = processor.getPropertyAvg(zip, new AvgMktValue());
         System.out.println("\nBEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");
@@ -238,7 +222,7 @@ public class Menu {
             return;
         }
 
-        int result = processor.getAvgMarketValue(zip, new AvgLivableArea());
+        int result = processor.getPropertyAvg(zip, new AvgLivableArea());
         System.out.println("\nBEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");
@@ -265,7 +249,7 @@ public class Menu {
 
     //7
     private void handleCustomFeature() {
-        System.out.println("Custom feature: Market value per square foot for a specified ZIP code.");
+        System.out.println("Custom feature: Market value per square foot and latest vaccination (full and half) ratio for a specified ZIP code.");
         System.out.println("Enter a 5-digit ZIP Code:");
         System.out.print("> ");
         System.out.flush();
@@ -277,7 +261,7 @@ public class Menu {
             return;
         }
 
-        int result = processor.getMarketValuePerSqFt(zip);
+        String result = processor.getCustom(zip);
         System.out.println("\nBEGIN OUTPUT");
         System.out.println(result);
         System.out.println("END OUTPUT");

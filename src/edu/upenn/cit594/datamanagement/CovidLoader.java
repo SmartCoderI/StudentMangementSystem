@@ -6,12 +6,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Reader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
@@ -45,16 +45,11 @@ public class CovidLoader {
     private List<CovidData> loadFromCSV() {
         Logger.getInstance().log(filename);
         List<CovidData> records = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+        try (CharacterReader charReader = new CharacterReader(filename)) {
+            CSVReader csvReader = new CSVReader(charReader);
+            String[] headers = csvReader.readRow();
 
-            String header = br.readLine();
-
-            if (header == null) return records;
-
-            String[] headers = header.split(",", -1);
-            for (int i = 0; i < headers.length; i++) {
-                headers[i] = headers[i].replaceAll("\"", "").trim().toLowerCase();
-            }
+            if (headers == null) return records;
 
             Map<String, Integer> index = new HashMap<>();
 
@@ -69,38 +64,22 @@ public class CovidLoader {
 
             if (zipIdx < 0 || timeIdx < 0 || partialIdx < 0 || fullIdx < 0) return records;
 
-            String line;
+            String[] line;
             int maxIndex = Math.max(Math.max(zipIdx, timeIdx), Math.max(partialIdx, fullIdx));
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",", -1);
+            while ((line = csvReader.readRow()) != null) {
+                if (Arrays.stream(line).count() <= maxIndex) continue;
 
-                if (parts.length <= maxIndex) continue;
-
-
-                String zip = parts[zipIdx].trim();
-                String timestamp = parts[timeIdx].trim();
+                String zip = line[zipIdx].trim();
+                String timestamp = line[timeIdx].trim();
                 timestamp = timestamp.replaceAll("^\"|\"$", "").trim();
-
-
-//                if (!isValidZip(zip)) {
-//                    System.out.println("Skipping due to invalid ZIP: " + zip);
-//                }
-//                if (!isValidTimestamp(timestamp)) {
-//                    System.out.println("Skipping due to invalid timestamp: " + timestamp);
-//                }
-
-                if (!isValidZip(zip) || !isValidTimestamp(timestamp)) continue;
-
-                zip = parseZipSafe(zip);
                 LocalDate date = parseDateSafe(timestamp, formatter);
-                if (date == null) continue;
 
+                if (!isValidZip(zip) || date == null) continue;
 
-                int partial = parseIntSafe(parts[partialIdx].trim());
-                int full = parseIntSafe(parts[fullIdx].trim());
-
+                int partial = parseIntSafe(line[partialIdx].trim());
+                int full = parseIntSafe(line[fullIdx].trim());
 
                 records.add(new CovidData(zip, date, partial, full));
             }
@@ -127,12 +106,9 @@ public class CovidLoader {
                 String timestamp = String.valueOf(json.get("etl_timestamp")).trim();
                 timestamp = timestamp.replaceAll("^\"|\"$", "").trim();
 
-
-                if (!isValidZip(zip) || !isValidTimestamp(timestamp)) continue;
-
-                zip = parseZipSafe(zip);
                 LocalDate date = parseDateSafe(timestamp, formatter);
-                if (date == null) continue;
+
+                if (!isValidZip(zip) || date == null) continue;
 
                 int partial = parseIntSafe(String.valueOf(json.get("partially_vaccinated")).trim());
                 int full = parseIntSafe(String.valueOf(json.get("fully_vaccinated")).trim());
@@ -147,35 +123,22 @@ public class CovidLoader {
         return records;
     }
 
-    private boolean isValidZip(String zip) {
-        return (zip != null &&
-                zip.length() >= 5 &&
-                zip.substring(0, 5).matches("\\d{5}"));
-    }
-
-    private boolean isValidTimestamp(String timestamp) {
-        return (timestamp != null &&
-                // Can further modify to set interval for valid time expression, such as HH should be 0~23
-                timestamp.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
-    }
-
-    private String parseZipSafe(String raw) {
-        if (raw == null) return null;
-        return raw.substring(0, 5);
+    private boolean isValidZip(String raw) {
+        return raw.matches("^[0-9]{5}$");
     }
 
     private LocalDate parseDateSafe(String raw, DateTimeFormatter formatter) {
         try {
             if (raw == null || formatter == null) return null;
             return LocalDateTime.parse(raw, formatter).toLocalDate();
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             return null;
         }
     }
 
     private int parseIntSafe(String str) {
         try {
-            if (str.isEmpty() || str.equals("null") || str == null) return 0;
+            if (str.isEmpty() || str.equals("null") || str == null || str.equals("")) return 0;
             return Integer.parseInt(str);
         } catch (Exception e) {
             return 0;

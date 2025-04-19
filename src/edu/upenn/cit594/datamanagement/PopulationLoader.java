@@ -2,9 +2,8 @@ package edu.upenn.cit594.datamanagement;
 
 import edu.upenn.cit594.logging.Logger;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,44 +35,49 @@ public class PopulationLoader {
         // Log file name when open the file
         Logger.getInstance().log(filename);
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String headerLine = br.readLine();
+        try (CharacterReader charReader = new CharacterReader(filename)) {
+            CSVReader csvReader = new CSVReader(charReader);
+            String[] headerLine = csvReader.readRow();
+
             if (headerLine == null) return zipToPopulation;
 
-            String[] headers = headerLine.replaceAll("\"", "").split(",");
             int zipIndex = -1, popIndex = -1;
 
             // Determine the indices of zip_code and population
-            for (int i = 0; i < headers.length; i++) {
-                String header = headers[i].trim().toLowerCase();
+            for (int i = 0; i < headerLine.length; i++) {
+                String header = headerLine[i].trim().toLowerCase();
                 if (header.equals("zip_code")) zipIndex = i;
                 else if (header.equals("population")) popIndex = i;
             }
 
             if (zipIndex == -1 || popIndex == -1) return zipToPopulation;
 
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.replaceAll("\"", "").split(",");
+            String[] line;
+            int maxIndex = Math.max(zipIndex, popIndex);
+            while ((line = csvReader.readRow()) != null) {
+                if (Arrays.stream(line).count() <= maxIndex) continue;
 
-                if (parts.length <= Math.max(zipIndex, popIndex)) continue;
+                String zip = line[zipIndex].trim();
+                String popStr = line[popIndex].trim();
 
-                String zip = parts[zipIndex].trim();
-                String popStr = parts[popIndex].trim();
-
-                if (zip.matches("\\d{5}") && popStr.matches("\\d+")) {
+                if (validateZip(zip)) {
                     try {
                         zipToPopulation.put(zip, Integer.parseInt(popStr));
-                    } catch (NumberFormatException ignored) {
-                        // Skip line
+                    } catch (NumberFormatException e) {
+                        //Unparseable population data, skip the entry
                     }
                 }
             }
-
         } catch (IOException e) {
             System.err.println("Error reading population file: " + e.getMessage());
+        } catch (CSVFormatException e) {
+            System.err.println("Error reading CSV file: " + e.getMessage());
         }
 
         return zipToPopulation;
+    }
+
+    private boolean validateZip(String raw) {
+        return raw.matches("^[0-9]{5}$");
     }
 }
