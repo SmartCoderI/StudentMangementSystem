@@ -10,6 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
+import edu.upenn.cit594.datamanagement.CSVReader;
+import edu.upenn.cit594.datamanagement.CharacterReader;
+
 
 /**
  * only provided in csv file, no JSON file
@@ -41,15 +47,58 @@ public class PropertyLoader {
 
         Logger.getInstance().log(filename);
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String header = br.readLine();
-            if (header == null) return properties;
+//        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+//            String header = br.readLine();
+//            if (header == null) return properties;
+//
+//            // Map column names to indices
+//            String[] columns = header.split(",", -1);
+//            Map<String, Integer> colIndex = new HashMap<>();
+//            for (int i = 0; i < columns.length; i++) {
+//                colIndex.put(columns[i].trim().toLowerCase(), i);
+//            }
+//
+//            Integer zipIndex = colIndex.get("zip_code");
+//            Integer valueIndex = colIndex.get("market_value");
+//            Integer areaIndex = colIndex.get("total_livable_area");
+//
+//            if (zipIndex == null || valueIndex == null || areaIndex == null) {
+//                System.err.println("Missing required columns in header.");
+//                return properties;
+//            }
+//
+//            // Start processing meaningful entries
+//            String line;
+//            int maxIndex = Math.max(zipIndex, Math.max(valueIndex, areaIndex));
+//            while ((line = br.readLine()) != null) {
+//                String[] parts = line.split(",", -1);
+//                // Row have enough fields to safely access indices
+//                if (parts.length <= maxIndex) continue;
+//
+//                String zipRaw = parts[zipIndex].trim();
+//                String zip = extractFiveDigitZip(zipRaw);
+//                if (zip == null) continue;
+//
+//                if (zip.length() < 5 || !zip.substring(0, 5).matches("\\d{5}")) continue;
+//
+//                Double marketValue = parseDoubleSafe(parts[valueIndex].trim());
+//                Double livableArea = parseDoubleSafe(parts[areaIndex].trim());
+//
+//                //if (marketValue == null && livableArea == null) continue;
+//
+//                PropertyData property = new PropertyData(zip, marketValue, livableArea);
+//                //properties.add(property);
+//                properties.add(new PropertyData(zip, marketValue, livableArea));
+//            }
+        try (CharacterReader charReader = new CharacterReader(filename)) {
+            CSVReader csvReader = new CSVReader(charReader);
 
-            // Map column names to indices
-            String[] columns = header.split(",", -1);
+            String[] headers = csvReader.readRow();
+            if (headers == null) return properties;
+
             Map<String, Integer> colIndex = new HashMap<>();
-            for (int i = 0; i < columns.length; i++) {
-                colIndex.put(columns[i].trim().toLowerCase(), i);
+            for (int i = 0; i < headers.length; i++) {
+                colIndex.put(headers[i].trim().toLowerCase(), i);
             }
 
             Integer zipIndex = colIndex.get("zip_code");
@@ -57,36 +106,28 @@ public class PropertyLoader {
             Integer areaIndex = colIndex.get("total_livable_area");
 
             if (zipIndex == null || valueIndex == null || areaIndex == null) {
-                System.err.println("Missing required columns in header.");
+                System.err.println("Missing required columns.");
                 return properties;
             }
 
-            // Start processing meaningful entries
-            String line;
-            int maxIndex = Math.max(zipIndex, Math.max(valueIndex, areaIndex));
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",", -1);
-                // Row have enough fields to safely access indices
-                if (parts.length <= maxIndex) continue;
+            String[] row;
+            while ((row = csvReader.readRow()) != null) {
+                if (row.length <= Math.max(zipIndex, Math.max(valueIndex, areaIndex))) continue;
 
-                String zipRaw = parts[zipIndex].trim();
-                String zip = extractFiveDigitZip(zipRaw);
-                if (zip == null) continue;
+                String zip = extractFiveDigitZip(row[zipIndex]);
+                if (zip == null || !zip.matches("\\d{5}")) continue;
 
-                if (zip.length() < 5 || !zip.substring(0, 5).matches("\\d{5}")) continue;
+                Double marketValue = parseDoubleSafe(row[valueIndex]);
+                Double livableArea = parseDoubleSafe(row[areaIndex]);
 
-                Double marketValue = parseDoubleSafe(parts[valueIndex].trim());
-                Double livableArea = parseDoubleSafe(parts[areaIndex].trim());
-
-                if (marketValue == null && livableArea == null) continue;
-
-                PropertyData property = new PropertyData(zip, marketValue, livableArea);
-                //properties.add(property);
+                // Keep all valid zip entries
                 properties.add(new PropertyData(zip, marketValue, livableArea));
             }
 
         } catch (IOException e) {
             System.err.println("Error reading properties file: " + e.getMessage());
+        } catch (CSVFormatException e) {
+            throw new RuntimeException(e);
         }
         return properties;
     }
